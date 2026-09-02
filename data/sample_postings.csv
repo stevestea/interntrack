@@ -1,0 +1,6 @@
+company,title,location,remote,url,date_posted,source,description
+Datadog,Software Engineer Intern,"New York, NY",false,https://example.com/dd-swe-1,2026-08-14,linkedin,"Seeking a software engineering intern. You will work with Python and Go, write SQL queries against Postgres, and deploy services on AWS. Experience with Git and unit testing required."
+Rackspace,Software Development Intern,"San Antonio, TX",true,https://example.com/rax-swe-1,2026-08-20,handshake,"Summer internship. Java or Python, REST APIs, SQL, Docker. Coursework in data structures and algorithms expected."
+USAA,Data Analyst Intern,"San Antonio, TX",false,https://example.com/usaa-da-1,2026-08-22,careers,"Analyze business data using SQL and Python. Build dashboards in Tableau. Statistics coursework preferred. Excel proficiency required."
+H-E-B,Software Engineer Intern,"San Antonio, TX",false,https://example.com/heb-swe-1,2026-08-25,handshake,"Build internal tools with Python and JavaScript. Work with Postgres. Agile team environment. Git required."
+Capital One,Technology Intern,"Plano, TX",false,https://example.com/cof-tech-1,2026-08-27,linkedin,"Full stack development. Java, Python, React, AWS. SQL fundamentals. Testing and CI/CD exposure a plus."
