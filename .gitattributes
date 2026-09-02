@@ -1,0 +1,12 @@
+# Normalize line endings: store everything as LF in the repository,
+# check out native line endings on each platform. Prevents spurious
+# "whole file changed" diffs between Windows and Linux.
+* text=auto eol=lf
+
+# Binary files git should never touch
+*.png binary
+*.jpg binary
+*.pdf binary
+*.xlsx binary
+*.docx binary
+*.db binary
