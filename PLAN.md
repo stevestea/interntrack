@@ -73,6 +73,11 @@ scraper degrades to manual CSV import instead of an outage.
 ## Status log
 
 - 2026-09-02 — Plan locked. Repo scaffolded. Phase 0 in progress.
+- 2026-09-02 — Phase 0 complete: venv on Python 3.11.9, dependencies
+  installed, git initialized, pushed to github.com/stevestea/interntrack.
+- 2026-09-02 — Phase 1 started: `app/models.py` created with Company as a
+  worked example; Posting, Application, StatusEvent and PostingSkill are
+  Bao's to write.
 - 2026-09-02 — Toolchain gotcha: `python` on this machine resolves to MSYS2
   (Unix layout, `bin/` not `Scripts/`, no compatible wheels). Always use `py`
   to create the venv.
