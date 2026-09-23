@@ -128,3 +128,35 @@ class Posting(Base):
 
     def __repr__(self) -> str:
         return f"<Posting id={self.id} title={self.title!r}>"
+
+class Application(Base):
+    __tablename__ = "applications"
+
+    id: Mapped[int] = mapped_column(primary_key =True)
+    posting_id: Mapped[int] = mapped_column(ForeignKey("postings.id"), unique = True)
+    status: Mapped[str] = mapped_column(String(30), default = "applied")
+    applied_at: Mapped[date | None] = mapped_column()
+    notes: Mapped[str | None] = mapped_column(Text)
+
+    def __repr__(self) -> str:
+        return f"<Application id={self.id} status={self.status!r}>"
+
+class StatusEvent(Base):
+    __tablename__ = "status_events"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    application_id: Mapped[int] = mapped_column(ForeignKey("applications.id"))
+    status: Mapped[str] = mapped_column(String(30))
+    occurred_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+    def __repr__(self) -> str:
+        return f"<StatusEvent app={self.application_id} status={self.status!r}>"
+
+class PostingSkill(Base):
+    __tablename__ = "posting_skills"
+
+    posting_id: Mapped[int] = mapped_column(ForeignKey("postings.id"), primary_key=True)
+    skill: Mapped[str] = mapped_column(String(80), primary_key=True)
+
+    def __repr__(self) -> str:
+        return f"<PostingSkill posting={self.posting_id} skill={self.skill!r}>"

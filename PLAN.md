@@ -78,6 +78,13 @@ scraper degrades to manual CSV import instead of an outage.
 - 2026-09-02 — Phase 1 started: `app/models.py` created with Company as a
   worked example; Posting, Application, StatusEvent and PostingSkill are
   Bao's to write.
+- 2026-09-23 — Phase 1 COMPLETE. All five models written by Bao in
+  `app/models.py`: Company (worked example), Posting, Application, StatusEvent,
+  PostingSkill. Verified: Base.metadata.tables reports all five tables.
+- 2026-09-23 — Work split revised: Bao writes the decision-bearing code
+  (models, ingestion logic, analytics queries, tests); Claude writes boilerplate
+  (HTML templates, CSS, config, CI YAML, deploy). Roughly halves his time while
+  keeping every part an interviewer would probe in his hands.
 - 2026-09-02 — Toolchain gotcha: `python` on this machine resolves to MSYS2
   (Unix layout, `bin/` not `Scripts/`, no compatible wheels). Always use `py`
   to create the venv.
