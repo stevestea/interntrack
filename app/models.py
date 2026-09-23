@@ -109,3 +109,22 @@ class Company(Base):
 #     This is the shape that makes the skill-frequency GROUP BY work.
 #
 # When all four are written, tell me and I will review it line by line.
+
+
+class Posting(Base):
+    __tablename__ = "postings"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"))
+    title: Mapped[str] = mapped_column(String(200))
+    location: Mapped[str | None] = mapped_column(String(120))
+    remote: Mapped[bool] = mapped_column(default=False)
+    url: Mapped[str] = mapped_column(String(500), unique=True)
+    description: Mapped[str | None] = mapped_column(Text)
+    date_posted: Mapped[date | None] = mapped_column()
+    source: Mapped[str | None] = mapped_column(String(50))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    company: Mapped["Company"] = relationship(back_populates="postings")
+
+    def __repr__(self) -> str:
+        return f"<Posting id={self.id} title={self.title!r}>"
