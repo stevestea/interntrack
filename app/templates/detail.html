@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ posting.title }} — InternTrack{% endblock %}
+
+{% block content %}
+  <p><a href="{{ url_for('index') }}">← All postings</a></p>
+
+  <h1>{{ posting.title }}</h1>
+  <div class="meta">
+    {{ posting.company.name }}
+    · {{ posting.location or "Location not listed" }}
+    {% if posting.remote %}· remote{% endif %}
+    · posted {{ posting.date_posted | fmtdate }}
+    {% if posting.source %}· via {{ posting.source }}{% endif %}
+  </div>
+  <p class="meta"><a href="{{ posting.url }}" target="_blank" rel="noopener">Open original posting →</a></p>
+
+  {% if skills %}
+    <h2>Skills detected</h2>
+    <ul class="skills">
+      {% for s in skills %}<li class="chip">{{ s }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+
+  <h2>Application</h2>
+  {% if application %}
+    <p class="meta">
+      Applied {{ application.applied_at | fmtdate }} ·
+      current status <span class="chip status">{{ application.status }}</span>
+    </p>
+
+    <form method="post" action="{{ url_for('update_status', application_id=application.id) }}">
+      <select name="status">
+        {% for s in statuses %}
+          <option value="{{ s }}" {% if s == application.status %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      <button class="primary" type="submit">Record status</button>
+    </form>
+
+    <h2>Timeline</h2>
+    <ul class="timeline">
+      {% for e in events %}
+        <li>{{ e.status }} · <time>{{ e.occurred_at.strftime("%b %d, %Y at %H:%M") }}</time></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="meta">Not applied yet.</p>
+    <form method="post" action="{{ url_for('apply', posting_id=posting.id) }}">
+      <button class="primary" type="submit">Mark as applied</button>
+    </form>
+  {% endif %}
+
+  {% if posting.description %}
+    <h2>Description</h2>
+    <div class="desc">{{ posting.description }}</div>
+  {% endif %}
+{% endblock %}

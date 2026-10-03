@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}InternTrack{% endblock %}</title>
+  <style>
+    :root {
+      --bg: #ffffff; --fg: #1a1a1a; --muted: #6b7280; --line: #e5e7eb;
+      --accent: #1d4ed8; --ok-bg: #dcfce7; --ok-fg: #166534;
+      --warn-bg: #fef3c7; --warn-fg: #92400e; --chip: #f3f4f6;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1115; --fg: #e8e8e8; --muted: #9ca3af; --line: #272b33;
+        --accent: #7aa2f7; --ok-bg: #14321f; --ok-fg: #86efac;
+        --warn-bg: #3a2d10; --warn-fg: #fcd34d; --chip: #1b1f27;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--fg);
+      font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 24px 20px 60px; }
+    header { border-bottom: 1px solid var(--line); margin-bottom: 24px; padding-bottom: 14px; }
+    header a.brand { font-weight: 650; font-size: 18px; color: var(--fg); text-decoration: none; }
+    header .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+    a { color: var(--accent); }
+    .stats { display: flex; gap: 18px; color: var(--muted); font-size: 13px; margin-top: 6px; }
+    form.filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; align-items: center; }
+    input[type=text], select {
+      padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px;
+      background: var(--bg); color: var(--fg); font: inherit;
+    }
+    input[type=text] { min-width: 240px; }
+    button {
+      padding: 7px 13px; border: 1px solid var(--line); border-radius: 6px;
+      background: var(--chip); color: var(--fg); font: inherit; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: #fff; border-color: transparent; }
+    label.inline { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+    td.company { white-space: nowrap; color: var(--muted); }
+    .chip {
+      display: inline-block; padding: 2px 8px; border-radius: 999px;
+      background: var(--chip); color: var(--muted); font-size: 12px;
+    }
+    .chip.status { background: var(--ok-bg); color: var(--ok-fg); }
+    .flash { padding: 9px 12px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; }
+    .flash.ok { background: var(--ok-bg); color: var(--ok-fg); }
+    .flash.warn { background: var(--warn-bg); color: var(--warn-fg); }
+    .empty { color: var(--muted); padding: 32px 0; text-align: center; }
+    .desc { white-space: pre-wrap; color: var(--fg); margin-top: 10px; }
+    .meta { color: var(--muted); font-size: 14px; }
+    .skills { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 0; padding: 0; list-style: none; }
+    .timeline { list-style: none; padding: 0; margin: 10px 0 0; }
+    .timeline li { padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+    .timeline time { color: var(--muted); }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 26px 0 6px; }
+    .table-scroll { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="brand" href="{{ url_for('index') }}">InternTrack</a>
+      <div class="sub">Application tracker and posting analytics</div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

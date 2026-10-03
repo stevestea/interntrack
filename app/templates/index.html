@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="stats">
+    <span><strong>{{ total }}</strong> postings tracked</span>
+    <span><strong>{{ applied_count }}</strong> applied</span>
+  </div>
+
+  <form class="filters" method="get">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search title or company">
+    <select name="status">
+      <option value="">Any status</option>
+      {% for s in statuses %}
+        <option value="{{ s }}" {% if s == status %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <label class="inline">
+      <input type="checkbox" name="remote" value="1" {% if remote_only %}checked{% endif %}>
+      Remote only
+    </label>
+    <button class="primary" type="submit">Filter</button>
+    <a href="{{ url_for('index') }}">Clear</a>
+  </form>
+
+  {% if postings %}
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Company</th>
+            <th>Location</th>
+            <th>Posted</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in postings %}
+            <tr>
+              <td>
+                <a href="{{ url_for('posting_detail', posting_id=p.id) }}">{{ p.title }}</a>
+                {% if p.remote %}<span class="chip">remote</span>{% endif %}
+              </td>
+              <td class="company">{{ p.company.name }}</td>
+              <td class="company">{{ p.location or "—" }}</td>
+              <td class="company">{{ p.date_posted | fmtdate }}</td>
+              <td>
+                {% if apps.get(p.id) %}
+                  <span class="chip status">{{ apps[p.id].status }}</span>
+                {% else %}
+                  <span class="chip">not applied</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty">
+      No postings match. Import some with <code>python -m app.ingest</code>, or clear the filters.
+    </p>
+  {% endif %}
+{% endblock %}
