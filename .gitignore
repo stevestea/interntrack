@@ -10,3 +10,5 @@ venv/
 htmlcov/
 instance/
 .DS_Store
+
+docs/LESSONS.md
