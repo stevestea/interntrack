@@ -69,6 +69,10 @@
     <header>
       <a class="brand" href="{{ url_for('index') }}">InternTrack</a>
       <div class="sub">Application tracker and posting analytics</div>
+      <nav style="margin-top:8px; display:flex; gap:14px; font-size:14px;">
+        <a href="{{ url_for('index') }}">Postings</a>
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+      </nav>
     </header>
 
     {% with messages = get_flashed_messages(with_categories=true) %}

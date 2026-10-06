@@ -14,6 +14,7 @@ from flask import Flask, abort, flash, redirect, render_template, request, url_f
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
+from app import analytics
 from app.db import DB_PATH, get_session, init_db
 from app.models import Application, Company, Posting, PostingSkill, StatusEvent
 
@@ -191,6 +192,15 @@ def create_app() -> Flask:
             if application is None:
                 abort(404)
 
+            # Guard against logging a status that did not change. Two
+            # identical consecutive events carry no information and would
+            # skew the funnel and response-time maths.
+            if application.status == new_status:
+                flash(f"Already {new_status} - nothing recorded.", "warn")
+                return redirect(
+                    url_for("posting_detail", posting_id=application.posting_id)
+                )
+
             session.add(StatusEvent(application_id=application.id, status=new_status))
             application.status = new_status
             session.commit()
@@ -198,6 +208,34 @@ def create_app() -> Flask:
 
             return redirect(
                 url_for("posting_detail", posting_id=application.posting_id)
+            )
+        finally:
+            session.close()
+
+    @app.route("/dashboard")
+    def dashboard():
+        """Aggregate view over every posting and application."""
+        session = get_session()
+        try:
+            skills = analytics.skill_frequency(session)
+            funnel_df = analytics.funnel(session)
+            timing = analytics.response_times(session)
+            over_time = analytics.postings_over_time(session)
+            companies = analytics.top_companies(session)
+            stats = analytics.headline_stats(session)
+
+            return render_template(
+                "dashboard.html",
+                stats=stats,
+                skills=skills.to_dict("records"),
+                skills_max=int(skills["count"].max()) if not skills.empty else 0,
+                funnel=funnel_df.to_dict("records"),
+                funnel_max=int(funnel_df["count"].max()) if not funnel_df.empty else 0,
+                timing=timing,
+                over_time=over_time.to_dict("records"),
+                over_time_max=int(over_time["count"].max()) if not over_time.empty else 0,
+                companies=companies.to_dict("records"),
+                companies_max=int(companies["count"].max()) if not companies.empty else 0,
             )
         finally:
             session.close()

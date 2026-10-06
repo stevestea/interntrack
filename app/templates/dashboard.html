@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — InternTrack{% endblock %}
+
+{% block content %}
+<style>
+  /* Stat tiles — a bare number is the right form when there is one value
+     and no distribution to show. A chart here would add nothing. */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+           gap: 12px; margin-bottom: 30px; }
+  .tile { border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+  .tile .n { font-size: 28px; font-weight: 650; line-height: 1.1; letter-spacing: -.02em; }
+  .tile .l { color: var(--muted); font-size: 12px; text-transform: uppercase;
+             letter-spacing: .05em; margin-top: 4px; }
+  .tile .sub { color: var(--muted); font-size: 12px; margin-top: 6px; }
+
+  .panel { margin-bottom: 34px; }
+  .panel h2 { margin-bottom: 4px; }
+  .panel .note { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
+
+  /* Horizontal bars. Long category labels read far better horizontally than
+     rotated under a vertical axis. Thin marks, rounded data-end, 2px gaps. */
+  .bars { display: grid; gap: 6px; }
+  .bar-row { display: grid; grid-template-columns: 120px 1fr 56px;
+             align-items: center; gap: 10px; }
+  .bar-row .cat { font-size: 13px; color: var(--fg); text-align: right;
+                  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-track { background: var(--chip); border-radius: 4px; height: 18px;
+               position: relative; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--accent);
+              border-radius: 0 4px 4px 0; transition: width .2s; }
+  .bar-row .val { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .bar-row:hover .bar-fill { filter: brightness(1.12); }
+
+  .sparkline { width: 100%; height: 90px; display: block; }
+  .sparkline .area { fill: var(--accent); opacity: .14; }
+  .sparkline .line { fill: none; stroke: var(--accent); stroke-width: 2;
+                     stroke-linejoin: round; stroke-linecap: round; }
+  .sparkline .dot { fill: var(--accent); }
+  .axis-labels { display: flex; justify-content: space-between;
+                 color: var(--muted); font-size: 11px; margin-top: 4px; }
+
+  details.table-view { margin-top: 10px; }
+  details.table-view summary { color: var(--muted); font-size: 13px; cursor: pointer; }
+  details.table-view table { margin-top: 8px; }
+</style>
+
+<p><a href="{{ url_for('index') }}">← All postings</a></p>
+
+<h1>Dashboard</h1>
+<p class="meta">Aggregate view over every posting collected, applied to or not.</p>
+
+<div class="tiles">
+  <div class="tile"><div class="n">{{ stats.postings }}</div><div class="l">Postings</div></div>
+  <div class="tile"><div class="n">{{ stats.companies }}</div><div class="l">Companies</div></div>
+  <div class="tile"><div class="n">{{ stats.applications }}</div><div class="l">Applied</div></div>
+  <div class="tile"><div class="n">{{ stats.remote }}</div><div class="l">Remote</div></div>
+  <div class="tile">
+    <div class="n">{{ timing.median_days if timing.median_days is not none else "—" }}</div>
+    <div class="l">Median days to reply</div>
+    {% if timing.n %}<div class="sub">from {{ timing.n }} response{{ "" if timing.n == 1 else "s" }}</div>
+    {% else %}<div class="sub">no responses yet</div>{% endif %}
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Skills in demand</h2>
+  <p class="note">
+    Share of all {{ stats.postings }} tracked postings whose description mentions each skill.
+    Counts every posting collected, not only those applied to.
+  </p>
+  {% if skills %}
+    <div class="bars">
+      {% for s in skills %}
+        <div class="bar-row" title="{{ s.skill }}: {{ s.count }} of {{ stats.postings }} postings ({{ s.pct }}%)">
+          <span class="cat">{{ s.skill }}</span>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: {{ (s.count / skills_max * 100) if skills_max else 0 }}%"></div>
+          </div>
+          <span class="val">{{ s.pct }}%</span>
+        </div>
+      {% endfor %}
+    </div>
+    <details class="table-view">
+      <summary>View as table</summary>
+      <table>
+        <thead><tr><th>Skill</th><th>Postings</th><th>Share</th></tr></thead>
+        <tbody>
+          {% for s in skills %}
+            <tr><td>{{ s.skill }}</td><td>{{ s.count }}</td><td>{{ s.pct }}%</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </details>
+  {% else %}
+    <p class="empty">No skills extracted yet. Import postings first.</p>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>Application funnel</h2>
+  <p class="note">
+    Applications that <em>reached</em> each stage, counted from the status event log —
+    so an application later rejected still counts as having reached interview.
+  </p>
+  {% if stats.applications %}
+    <div class="bars">
+      {% for f in funnel %}
+        <div class="bar-row" title="{{ f.stage }}: {{ f.count }} applications ({{ f.pct_of_applied }}% of applied)">
+          <span class="cat">{{ f.stage }}</span>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: {{ (f.count / funnel_max * 100) if funnel_max else 0 }}%"></div>
+          </div>
+          <span class="val">{{ f.count }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty">No applications recorded yet.</p>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>Posting volume</h2>
+  <p class="note">Postings per week, by the date the company listed them.</p>
+  {% if over_time|length > 1 %}
+    {% set w = 100.0 / (over_time|length - 1) %}
+    <svg class="sparkline" viewBox="0 0 100 30" preserveAspectRatio="none" role="img"
+         aria-label="Postings per week over time">
+      <polyline class="line" points="
+        {%- for p in over_time -%}
+          {{ loop.index0 * w }},{{ 28 - (p.count / over_time_max * 26 if over_time_max else 0) }}
+        {% endfor -%}" />
+      {% for p in over_time %}
+        <circle class="dot" cx="{{ loop.index0 * w }}"
+                cy="{{ 28 - (p.count / over_time_max * 26 if over_time_max else 0) }}" r="1.2">
+          <title>{{ p.week }}: {{ p.count }} posting{{ "" if p.count == 1 else "s" }}</title>
+        </circle>
+      {% endfor %}
+    </svg>
+    <div class="axis-labels">
+      <span>{{ over_time[0].week }}</span>
+      <span>{{ over_time[-1].week }}</span>
+    </div>
+  {% elif over_time %}
+    <p class="meta">{{ over_time[0].count }} posting(s) in week of {{ over_time[0].week }} — need more weeks to plot a trend.</p>
+  {% else %}
+    <p class="empty">No posting dates recorded.</p>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>Most active companies</h2>
+  <p class="note">Companies by number of postings collected.</p>
+  {% if companies %}
+    <div class="bars">
+      {% for c in companies %}
+        <div class="bar-row" title="{{ c.company }}: {{ c.count }} posting{{ '' if c.count == 1 else 's' }}">
+          <span class="cat">{{ c.company }}</span>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: {{ (c.count / companies_max * 100) if companies_max else 0 }}%"></div>
+          </div>
+          <span class="val">{{ c.count }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty">No companies yet.</p>
+  {% endif %}
+</div>
+
+{% if timing.n %}
+  <div class="panel">
+    <h2>Response time</h2>
+    <p class="note">
+      Days from applying to first response. Applications still waiting are excluded —
+      counting them as zero would drag the median down and misrepresent it.
+    </p>
+    <div class="tiles">
+      <div class="tile"><div class="n">{{ timing.median_days }}</div><div class="l">Median days</div></div>
+      <div class="tile"><div class="n">{{ timing.mean_days }}</div><div class="l">Mean days</div></div>
+      <div class="tile"><div class="n">{{ timing.fastest }}</div><div class="l">Fastest</div></div>
+      <div class="tile"><div class="n">{{ timing.slowest }}</div><div class="l">Slowest</div></div>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}
